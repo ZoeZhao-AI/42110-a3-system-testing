@@ -37,3 +37,16 @@ def test_f8_s2_remove_product(page: Page) -> None:
     # Assert: the cart becomes empty
     expect(page.locator("#content")).to_contain_text("Your shopping cart is empty!", timeout=15000)
     expect(page.locator("#cart-total")).to_contain_text("0 item(s)")
+
+
+def test_f8_s3_update_quantity_to_zero(page: Page) -> None:
+    # Arrange: the cart has one MacBook
+    add_macbook_and_open_cart(page)
+
+    # Act: change the quantity to 0 and click the Update button
+    page.locator("input[name^='quantity']").fill("0")
+    page.locator("#content .input-group button.btn-primary").click()
+
+    # Assert: the product is removed and the cart becomes empty
+    expect(page.locator("#content")).to_contain_text("Your shopping cart is empty!", timeout=15000)
+    expect(page.locator("#cart-total")).to_contain_text("0 item(s)")
