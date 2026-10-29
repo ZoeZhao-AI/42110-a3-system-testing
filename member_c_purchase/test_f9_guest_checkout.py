@@ -56,3 +56,18 @@ def test_f9_s1_guest_checkout_success(page: Page) -> None:
     expect(page).to_have_url(re.compile("checkout/success"), timeout=15000)
     expect(page.locator("#content h1")).to_have_text("Your order has been placed!")
     expect(page.locator("#cart-total")).to_contain_text("0 item(s)")
+
+
+def test_f9_s2_missing_email(page: Page) -> None:
+    # Arrange: the cart has an iPhone and Guest Checkout is selected
+    start_guest_checkout(page)
+
+    # Act: fill in all billing details except the e-mail, then click Continue
+    fill_billing_details(page, email="")
+    page.locator("#button-guest").click()
+    wait_for_ajax(page)
+
+    # Assert: an e-mail error is shown and the checkout does not move to the next step
+    expect(page.locator(".text-danger").first).to_be_visible()
+    expect(page.locator(".text-danger").first).to_contain_text("E-Mail")
+    expect(page.locator("#button-shipping-method")).to_have_count(0)
