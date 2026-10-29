@@ -71,3 +71,23 @@ def test_f9_s2_missing_email(page: Page) -> None:
     expect(page.locator(".text-danger").first).to_be_visible()
     expect(page.locator(".text-danger").first).to_contain_text("E-Mail")
     expect(page.locator("#button-shipping-method")).to_have_count(0)
+
+
+def test_f9_s3_terms_not_agreed(page: Page) -> None:
+    # Arrange: the cart has an iPhone and Guest Checkout is selected
+    start_guest_checkout(page)
+
+    # Act: complete the billing and delivery steps, but do NOT tick the Terms & Conditions box
+    fill_billing_details(page)
+    page.locator("#button-guest").click()               # Step 2: Billing Details
+    wait_for_ajax(page)
+    page.locator("#button-shipping-method").click()     # Step 4: Delivery Method
+    wait_for_ajax(page)
+    page.locator("#button-payment-method").click()      # Step 5: Payment Method (box not ticked)
+    wait_for_ajax(page)
+
+    # Assert: a warning about the Terms & Conditions is shown and the order cannot be confirmed
+    warning = page.locator(".alert-danger")
+    expect(warning).to_be_visible()
+    expect(warning).to_contain_text("Terms & Conditions")
+    expect(page.locator("#button-confirm")).to_have_count(0)
