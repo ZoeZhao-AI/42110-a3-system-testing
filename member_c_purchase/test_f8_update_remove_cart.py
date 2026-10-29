@@ -25,3 +25,15 @@ def test_f8_s1_update_quantity(page: Page) -> None:
     expect(page.locator(".alert-success")).to_contain_text("You have modified your shopping cart")
     expect(page.locator("input[name^='quantity']")).to_have_value("3")
     expect(page.locator("#content")).to_contain_text("$1,806.00")
+
+
+def test_f8_s2_remove_product(page: Page) -> None:
+    # Arrange: the cart has one MacBook
+    add_macbook_and_open_cart(page)
+
+    # Act: click the red Remove button
+    page.locator("#content .input-group button.btn-danger").click()
+
+    # Assert: the cart becomes empty
+    expect(page.locator("#content")).to_contain_text("Your shopping cart is empty!", timeout=15000)
+    expect(page.locator("#cart-total")).to_contain_text("0 item(s)")
