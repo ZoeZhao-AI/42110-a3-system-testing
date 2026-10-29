@@ -37,3 +37,26 @@ def test_f7_s2_add_same_product_twice(page: Page) -> None:
     quantity_box = page.locator("input[name^='quantity']")
     expect(quantity_box).to_have_count(1)
     expect(quantity_box).to_have_value("2")
+
+
+def test_f7_s3_add_with_zero_quantity(page: Page) -> None:
+    # Arrange: open the MacBook product page
+    page.goto(BASE_URL, wait_until="domcontentloaded", timeout=60000)
+    page.get_by_role("link", name="MacBook").first.click()
+
+    # Act: change the quantity to 0 and click Add to Cart
+    page.locator("#input-quantity").fill("0")
+    page.get_by_role("button", name="Add to Cart").click()
+
+    # Wait until the website shows some kind of message
+    page.locator(".alert, .text-danger").first.wait_for()
+
+    # Assert 1: an error message is shown
+    expect(page.locator(".alert-danger, .text-danger").first).to_be_visible()
+
+    # Assert 2: no success message is shown
+    expect(page.locator(".alert-success")).to_have_count(0)
+
+    # Assert 3: the shopping cart is still empty
+    page.goto(BASE_URL + "index.php?route=checkout/cart", wait_until="domcontentloaded", timeout=60000)
+    expect(page.locator("#content")).to_contain_text("Your shopping cart is empty!")
