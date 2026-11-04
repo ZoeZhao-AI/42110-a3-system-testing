@@ -3,7 +3,7 @@
 
 from playwright.sync_api import Page, expect  # expect = used to check results
 
-from helpers import add_from_search, go
+from helpers import add_product, go
 
 IPHONE = "iPhone"
 IMAC = "iMac"
@@ -23,8 +23,8 @@ def names(page: Page):
 
 def test_f5_s1_two_products(page: Page) -> None:
     # Scenario 1: add the iPhone and the iMac, then open the comparison page
-    add_from_search(page, IPHONE, "compare")  # add the iPhone
-    add_from_search(page, IMAC, "compare")  # add the iMac
+    add_product(page, IPHONE, "compare")  # add the iPhone
+    add_product(page, IMAC, "compare")  # add the iMac
     go(page, "product/compare")  # Open the comparison page
 
     expect(page.get_by_role("heading", name="Product Comparison", exact=True)).to_be_visible()  # we are on the comparison page
@@ -35,8 +35,8 @@ def test_f5_s1_two_products(page: Page) -> None:
 
 def test_f5_s2_remove_one(page: Page) -> None:
     # Scenario 2: Remove the iMac, only the iPhone should remain
-    add_from_search(page, IPHONE, "compare")
-    add_from_search(page, IMAC, "compare")
+    add_product(page, IPHONE, "compare")
+    add_product(page, IMAC, "compare")
     go(page, "product/compare")
     expect(names(page)).to_have_count(2)  # wait until both products are shown
 
@@ -50,18 +50,19 @@ def test_f5_s2_remove_one(page: Page) -> None:
 
 def test_f5_s3_over_the_limit(page: Page) -> None:
     # Scenario 3: add five products, the page keeps only the newest four
-    added = [add_from_search(page, term, "compare") for term in FIVE_PRODUCTS]  # Add the names of the five products, in the order added
+    for product in FIVE_PRODUCTS:
+        add_product(page, product, "compare")  # Add the five products, in the order listed
     go(page, "product/compare")
 
     expect(names(page)).to_have_count(LIMIT)  # Make sure that at most four are shown
-    expect(names(page)).to_have_text(added[1:])  # Ensure that the four products on the page are the last four added
-    expect(names(page).filter(has_text=added[0])).to_have_count(0)  # Ensure that the first one added was dropped
+    expect(names(page)).to_have_text(FIVE_PRODUCTS[1:])  # Ensure that the four products on the page are the last four added
+    expect(names(page).filter(has_text=FIVE_PRODUCTS[0])).to_have_count(0)  # Ensure that the first one added was dropped
 
 
 def test_f5_s4_same_product_twice(page: Page) -> None:
     # Scenario 4: add the iPhone two times, it should be listed once
-    add_from_search(page, IPHONE, "compare")  # first time
-    add_from_search(page, IPHONE, "compare")  # second time
+    add_product(page, IPHONE, "compare")  # first time
+    add_product(page, IPHONE, "compare")  # second time
     go(page, "product/compare")
 
     expect(names(page)).to_have_count(1)  # ensure that the page only displays one column only
