@@ -1,9 +1,11 @@
 # F4 Product Search - test cases for T004
 # Tester: Quang Huy Vu
 
+import re
+
 from playwright.sync_api import Page, expect  # expect = used to check results
 
-from helpers import go, search
+from helpers import search
 
 SEARCH_HEADING = "Search"  # the h2 directly above the results (the h1 is "Search - <term>" and below it are input parameters, so match this one exactly)
 NO_MATCH = "Your shopping cart is empty!"  # The website's message when nothing is found (I don't know why this message is displayed but it is what is shown, so let's just use it)
@@ -69,4 +71,23 @@ def test_f4_s5_search_in_category(page: Page) -> None:
     expect(page).to_have_url(re.compile(r"category_id=57"))  # wait until the new results page has loaded
     expect(page.locator("#content")).to_contain_text(NO_MATCH)  # Ensure that nothing is found
     expect(page.locator(".product-thumb")).to_have_count(0)  # And also ensure that no product box is shown
+
+def test_f4_s6_search_in_subcategory(page: Page) -> None:
+    # Scenario 6: a product that sits only in a subcategory is found only when "Search in subcategories" is ticked
+    search(page, "iMac")  # first search covers all categories
+    expect(page.locator("input[name='sub_category']")).to_be_disabled()  # the box cannot be used until a category is chosen
+
+    page.locator("select[name='category_id']").select_option(value="20")  # Now we choose the parent category "Desktops"
+    expect(page.locator("input[name='sub_category']")).to_be_enabled()  # Choosing a category switches the "Search in category" box on (not in "disabled" state anymore), ensure that happens but unticked
+    page.locator("#button-search").click()  # Now we will click on the search button to perform the search inside Desktops
+    expect(page).to_have_url(re.compile(r"category_id=20"))  # Wait until the new results page has loaded
+    expect(page.locator("input[name='sub_category']")).not_to_be_checked()  # Make sure that the "Search in category" the box is unticked, so only Desktops itself is searched
+    expect(page.locator("#content")).to_contain_text(NO_MATCH)  # the iMac is not directly in Desktops
+    expect(page.locator(".product-thumb")).to_have_count(0)  # and no product is shown in the results area
+
+    page.locator("input[name='sub_category']").check()  # Now we try to search in subcategories by ticking "Search in subcategories"
+    page.locator("#button-search").click()  # Search again, now including the Mac subcategory
+    expect(page).to_have_url(re.compile(r"sub_category=true"))  # wait until the new results page has loaded
+    expect(page.locator("input[name='sub_category']")).to_be_checked()  # Now we tick the "Search in subcategories" box, so the Mac subcategory is included
+    expect(results(page).filter(has_text="iMac").first).to_be_visible()  # the iMac is found in the Mac subcategory
 
