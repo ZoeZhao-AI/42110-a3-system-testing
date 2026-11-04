@@ -1,6 +1,7 @@
 # Helper functions reused by the F1 to F6 tests
 
 import time  # used to make a new email address every run
+from typing import Optional  # lets older Python versions accept "str or None"
 
 from playwright.sync_api import Page  # Page = a browser tab
 
@@ -73,12 +74,24 @@ def search(page: Page, term: str) -> None:
     page.locator("#search button").click()
 
 
-def add_from_search(page: Page, term: str, action: str, index: int = 0) -> str:
-    # search for a word, click "compare" or "wishlist" on result number `index`
-    # and return that product's name, e.g. add_from_search(page, "mac", "compare")
+def add_from_search(page: Page, term: str, action: str, index: int = 0, pick: Optional[str] = None) -> str:
+    # search for a word, click "compare" or "wishlist" on one result and return that product's name
+    # by default the result is chosen by position (`index`), e.g. add_from_search(page, "mac", "compare")
+    # to choose by name instead, pass pick, e.g. add_from_search(page, "iphone", "wishlist", pick="iPhone")
     go(page, f"product/search&search={term}")
-    card = page.locator(".product-thumb").nth(index)  # one product box in the results
+    cards = page.locator(".product-thumb")  # one product box per search result
+    if pick:
+        # keep only the box whose product name is exactly `pick` (no "MacBook Air" when asking for "MacBook")
+        card = cards.filter(has=page.get_by_role("link", name=pick, exact=True)).first
+    else:
+        card = cards.nth(index)
     name = card.locator("h4 a").inner_text().strip()
     with page.expect_response(lambda r: ADD_ACTIONS[action] in r.url):  # wait until the website has saved it
         card.locator(f"button[onclick^='{action}.add']").click()
     return name
+
+
+def add_product(page: Page, name: str, action: str) -> str:
+    # search for a product by its exact name and click "compare" or "wishlist" on the box with that name
+    # e.g. add_product(page, "iPhone", "wishlist")
+    return add_from_search(page, name, action, pick=name)
