@@ -1,5 +1,5 @@
 # F2 User Login - test cases for T002
-# Tester: <your name>
+# Tester: Akriti Saxena
 
 from playwright.sync_api import Page, expect  # expect = used to check results
 
