@@ -1,5 +1,5 @@
 # F1 User Registration - test cases for T001
-# Tester: Quang Huy Vu
+# Tester: Akriti Saxena
 
 from playwright.sync_api import Page, expect
 
@@ -22,7 +22,7 @@ def test_f1_s2_duplicate_email(page: Page) -> None:
     # Scenario 2: register again with an email that is already registered
     email = register_user(page)  # first perform the registration (also logs in)
     logout(page) # then log out
-    submit_registration(page, email=email)  # the try to create a new account with the same email again
+    submit_registration(page, email=email)  # then try to create a new account with the same email again
 
     expect(page.locator(".alert-danger")).to_contain_text("E-Mail Address is already registered!")  # Find the red warning box at the top
     expect(page).to_have_title(REGISTER_TITLE)  # Confirm that we are still on the same page and that no second account created
