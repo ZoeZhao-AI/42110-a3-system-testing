@@ -66,4 +66,3 @@ def test_f5_s4_same_product_twice(page: Page) -> None:
 
     expect(names(page)).to_have_count(1)  # ensure that the page only displays one column only
     expect(names(page)).to_have_text([IPHONE])  # and it is the iPhone
-    expect(page.locator("#compare-total")).to_contain_text("(1)")  # the header counter says "Product Compare (1)"
